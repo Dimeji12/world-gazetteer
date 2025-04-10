@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>World Gazetteer</title>
+    <!-- Bootstrap CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    <!-- Marker Cluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">World Gazetteer</a>
+            <div class="d-flex">
+                <select id="countrySelect" class="form-select me-2">
+                    <option value="">Select a country</option>
+                </select>
+                <button id="locateBtn" class="btn btn-light">
+                    <i class="bi bi-geo-alt"></i> Locate Me
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="spinner-border text-light"></div>
+    </div>
+
+    <!-- Info Buttons -->
+    <div class="info-buttons btn-group-vertical">
+        <button id="demographicsBtn" class="btn btn-primary mb-2" title="Demographics">
+            <i class="bi bi-people-fill"></i> Info
+        </button>
+        <button id="weatherBtn" class="btn btn-info mb-2" title="Weather">
+            <i class="bi bi-cloud-sun"></i> Weather
+        </button>
+        <button id="wikiBtn" class="btn btn-warning mb-2" title="Wikipedia">
+            <i class="bi bi-book"></i> Wiki
+        </button>
+        <button id="holidaysBtn" class="btn btn-success mb-2" title="Holidays">
+            <i class="bi bi-calendar-event"></i> Holidays
+        </button>
+        <button id="landmarksBtn" class="btn btn-danger" title="Landmarks">
+            <i class="bi bi-camera"></i> Landmarks
+        </button>
+    </div>
+
+    <!-- Info Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Country Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalContent"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
