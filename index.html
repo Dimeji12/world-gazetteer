@@ -2,32 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>World Gazetteer</title>
-    
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
-    
-    <!-- Marker Cluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
-    
-    <!-- Custom CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">World Gazetteer</a>
             <div class="d-flex">
                 <select id="countrySelect" class="form-select me-2">
-                    <option value="">Select a country</option>
+                    <option value="">Loading countries...</option>
                 </select>
                 <button id="locateBtn" class="btn btn-light">
                     <i class="bi bi-geo-alt"></i> Locate Me
@@ -36,40 +26,83 @@
         </div>
     </nav>
 
-    <!-- Map Container -->
     <div id="map"></div>
 
-    <!-- Loading Overlay -->
     <div id="loadingOverlay">
         <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+        <div>Loading...</div>
     </div>
 
-    <!-- Info Buttons -->
-    <div class="info-buttons btn-group-vertical">
+    <div id="mapControls" class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">Map Options</h6>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Map Type</label>
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-outline-primary map-type-btn active" data-type="osm">
+                        <i class="bi bi-map"></i> OSM
+                    </button>
+                    <button type="button" class="btn btn-outline-danger map-type-btn" data-type="google">
+                        <i class="bi bi-google"></i> Google
+                    </button>
+                    <button type="button" class="btn btn-outline-success map-type-btn" data-type="esri">
+                        <i class="bi bi-globe"></i> Esri
+                    </button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Marker Types</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="showCities" checked>
+                    <label class="form-check-label" for="showCities">
+                        <i class="bi bi-building"></i> Cities
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="showAirports" checked>
+                    <label class="form-check-label" for="showAirports">
+                        <i class="bi bi-airplane"></i> Airports
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="showWiki" checked>
+                    <label class="form-check-label" for="showWiki">
+                        <i class="bi bi-book"></i> Wikipedia
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-buttons btn-group-vertical shadow-lg">
         <button id="demographicsBtn" class="btn btn-primary mb-2" title="Demographics">
-            <i class="bi bi-people-fill"></i> Info
+            <i class="bi bi-people-fill"></i> <span class="d-none d-sm-inline">Info</span>
         </button>
         <button id="weatherBtn" class="btn btn-info mb-2" title="Weather">
-            <i class="bi bi-cloud-sun"></i> Weather
+            <i class="bi bi-cloud-sun"></i> <span class="d-none d-sm-inline">Weather</span>
         </button>
         <button id="wikiBtn" class="btn btn-warning mb-2" title="Wikipedia">
-            <i class="bi bi-book"></i> Wiki
+            <i class="bi bi-book"></i> <span class="d-none d-sm-inline">Wiki</span>
         </button>
         <button id="holidaysBtn" class="btn btn-success mb-2" title="Holidays">
-            <i class="bi bi-calendar-event"></i> Holidays
+            <i class="bi bi-calendar-event"></i> <span class="d-none d-sm-inline">Holidays</span>
         </button>
-        <button id="landmarksBtn" class="btn btn-danger" title="Landmarks">
-            <i class="bi bi-camera"></i> Landmarks
+        <button id="landmarksBtn" class="btn btn-danger mb-2" title="Landmarks">
+            <i class="bi bi-camera"></i> <span class="d-none d-sm-inline">Landmarks</span>
+        </button>
+        <button id="currencyBtn" class="btn btn-purple mb-2" title="Currency">
+            <i class="bi bi-cash-coin"></i> <span class="d-none d-sm-inline">Currency</span>
         </button>
     </div>
 
-    <!-- Info Modal -->
     <div class="modal fade" id="infoModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalTitle">Country Information</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="modalContent"></div>
                 <div class="modal-footer">
@@ -79,7 +112,6 @@
         </div>
     </div>
 
-    <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>

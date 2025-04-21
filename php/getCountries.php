@@ -1,19 +1,36 @@
 <?php
 header('Content-Type: application/json');
+header("Access-Control-Allow-Origin: *");
 
-$geoJson = json_decode(file_get_contents('countryBorders.geo.json'), true);
+$url = "http://api.geonames.org/countryInfoJSON?username=dimejioladiti";
 
-$countries = [];
-foreach ($geoJson['features'] as $feature) {
-    $countries[] = [
-        'code' => $feature['properties']['iso_a2'],
-        'name' => $feature['properties']['name']
-    ];
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+curl_close($ch);
+
+if ($response === false) {
+    echo json_encode(['error' => 'Failed to fetch countries']);
+    exit;
 }
 
-usort($countries, function($a, $b) {
-    return strcmp($a['name'], $b['name']);
-});
+$data = json_decode($response, true);
+if (isset($data['geonames']) && is_array($data['geonames'])) {
+    $countries = array_map(function($country) {
+        return [
+            'code' => $country['countryCode'],
+            'name' => $country['countryName']
+        ];
+    }, $data['geonames']);
 
-echo json_encode($countries);
-?>
+    // Sort by name
+    usort($countries, function($a, $b) {
+        return strcmp($a['name'], $b['name']);
+    });
+
+    // Output the countries as JSON
+    echo json_encode($countries);
+} else {
+    echo json_encode(['error' => 'No countries found']);
+}
