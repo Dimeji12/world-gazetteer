@@ -1,5 +1,15 @@
+function isValidCoordinate(lat, lng)
+{
+    return !isNaN(lat) && !isNaN(lng) &&
+        lat >= -90 && lat <= 90 &&
+        lng >= -180 && lng <= 180;
+}
+
+
 $(document).ready(function ()
 {
+
+
     // Initialize variables
     let activeRequests = 0;
     let currentCountryData = null;
@@ -8,11 +18,25 @@ $(document).ready(function ()
     let currentLocationMarker = null;
 
     // Marker groups
-    const markerGroups = {
-        cities: L.markerClusterGroup({ maxClusterRadius: 80 }),
-        airports: L.markerClusterGroup({ disableClusteringAtZoom: 10 }),
-        wiki: L.markerClusterGroup({ spiderfyOnMaxZoom: true })
-    };
+  // Marker groups initialization
+const markerGroups = {
+    cities: L.markerClusterGroup({ 
+        maxClusterRadius: 80 
+    }),
+    airports: L.markerClusterGroup({
+        iconCreateFunction: function(cluster) {
+            return L.divIcon({
+                className: 'airport-cluster',
+                html: `<div>${cluster.getChildCount()}</div>`,
+                iconSize: [40, 40]
+            });
+        },
+        disableClusteringAtZoom: 8  // Show individual planes at zoom 8+
+    }),
+    wiki: L.markerClusterGroup({ 
+        spiderfyOnMaxZoom: true 
+    })
+};
 
     // Map providers
     const mapProviders = {
@@ -29,10 +53,12 @@ $(document).ready(function ()
 
     // ======================
     // UTILITY FUNCTIONS
-    // ======================
+    // =====================
+
 
     function showLoading(message = "Loading...")
     {
+
         activeRequests++;
         $('#loadingOverlay').show().find('div:last').text(message);
         console.log(`Loading: ${message}`);
@@ -270,23 +296,29 @@ $(document).ready(function ()
             .always(hideLoading);
     }
 
-    function loadCountryMarkers(countryCode) {
+    function loadCountryMarkers(countryCode)
+    {
         showLoading(`Loading markers for ${countryCode}`);
-        
-        // Clear existing markers
+
         markerGroups.cities.clearLayers();
         markerGroups.airports.clearLayers();
         markerGroups.wiki.clearLayers();
-    
+
         const loadPromises = [];
-        
-        // Only try to load what's checked
-        if ($('#showCities').is(':checked')) {
+
+
+
+
+        if ($('#showCities').is(':checked'))
+        {
             loadPromises.push(
                 $.get(`php/getCities.php?country=${countryCode}`)
-                    .done(data => {
-                        if (Array.isArray(data) && !data.error) {
-                            data.forEach(city => {
+                    .done(data =>
+                    {
+                        if (Array.isArray(data))
+                        {
+                            data.forEach(city =>
+                            {
                                 const marker = L.marker([city.lat, city.lng], {
                                     icon: L.divIcon({
                                         className: 'city-marker',
@@ -296,39 +328,75 @@ $(document).ready(function ()
                                 }).bindPopup(`<b>${city.name}</b><br>Population: ${city.population || 'N/A'}`);
                                 markerGroups.cities.addLayer(marker);
                             });
+                            console.log(`Added ${data.length} city markers`);
                         }
                     })
-                    .fail(() => console.log("Cities loading skipped or failed"))
+                    .fail(error => console.error("Cities error:", error))
             );
         }
-    
-        if ($('#showAirports').is(':checked')) {
+
+        if ($('#showAirports').is(':checked'))
+        {
             loadPromises.push(
-                $.get(`php/getAirports.php?country=${countryCode}`)
-                    .done(data => {
-                        if (Array.isArray(data) && !data.error) {
-                            data.forEach(airport => {
+                $.ajax({
+                    url: `php/getAirports.php?country=${countryCode}`,
+                    method: 'GET',
+                    dataType: 'json'
+                })
+                    .done(data =>
+                    {
+                        console.log('Airport API response:', data);
+
+                        if (Array.isArray(data))
+                        {
+                            const validAirports = data.filter(airport =>
+                                airport?.lat !== undefined &&
+                                airport?.lng !== undefined &&
+                                isValidCoordinate(airport.lat, airport.lng)
+                            );
+
+                            // In loadCountryMarkers() airport section:
+                            validAirports.forEach(airport =>
+                            {
+                                const planeIcon = L.icon({
+                                    iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="%23FF7800"><path d="M16 1l12 21-12-6-12 6z"/></svg>',
+                                    iconSize: [32, 32],      // Size of the icon
+                                    iconAnchor: [16, 16],    // Point of the icon that will match coordinates
+                                    popupAnchor: [0, -16]    // Where popup opens relative to icon
+                                });
+
                                 const marker = L.marker([airport.lat, airport.lng], {
-                                    icon: L.divIcon({
-                                        className: 'airport-marker',
-                                        html: '<div></div>',
-                                        iconSize: [12, 12]
-                                    })
-                                }).bindPopup(`<b>${airport.name}</b><br>Code: ${airport.code || 'N/A'}`);
+                                    icon: planeIcon
+                                }).bindPopup(`
+        <b>${airport.name}</b><br>
+        ${airport.code ? `IATA: ${airport.code}<br>` : ''}
+        ${airport.city ? `City: ${airport.city}` : ''}
+    `);
                                 markerGroups.airports.addLayer(marker);
                             });
                         }
                     })
-                    .fail(() => console.log("Airports loading skipped or failed"))
+                    .fail((jqXHR, textStatus, errorThrown) =>
+                    {
+                        console.error("Airports request failed:",
+                            `Status: ${textStatus}`,
+                            `Error: ${errorThrown}`,
+                            `Response: ${jqXHR.responseText}`
+                        );
+                    })
             );
         }
-    
-        if ($('#showWiki').is(':checked')) {
+
+        if ($('#showWiki').is(':checked'))
+        {
             loadPromises.push(
                 $.get(`php/getWikiPoints.php?country=${countryCode}`)
-                    .done(data => {
-                        if (Array.isArray(data) && !data.error) {
-                            data.forEach(point => {
+                    .done(data =>
+                    {
+                        if (Array.isArray(data))
+                        {
+                            data.forEach(point =>
+                            {
                                 const marker = L.marker([point.lat, point.lng], {
                                     icon: L.divIcon({
                                         className: 'wiki-marker',
@@ -338,20 +406,18 @@ $(document).ready(function ()
                                 }).bindPopup(`<b>${point.title}</b><br><a href="${point.url}" target="_blank">Read more</a>`);
                                 markerGroups.wiki.addLayer(marker);
                             });
+                            console.log(`Added ${data.length} wiki markers`);
                         }
                     })
-                    .fail(() => console.log("Wiki points loading skipped or failed"))
+                    .fail(error => console.error("Wiki points error:", error))
             );
         }
-    
-        // Handle all promises
-        Promise.allSettled(loadPromises)
-            .then(() => {
-                map.invalidateSize();
-            })
-            .finally(() => {
-                hideLoading();
-            });
+
+        Promise.all(loadPromises).finally(() =>
+        {
+            hideLoading();
+            map.invalidateSize();
+        });
     }
 
     // ======================

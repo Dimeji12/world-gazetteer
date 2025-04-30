@@ -73,50 +73,86 @@ body {
 }
 
 /* Marker Styles */
-.city-marker div,
-.airport-marker div,
-.wiki-marker div {
-    position: absolute;
+.city-marker {
+    background: #3388ff;
     width: 12px;
     height: 12px;
     border-radius: 50%;
     border: 2px solid white;
-    transform: translate(-6px, -6px);
 }
 
-.city-marker div { background: #3388ff; }
-.airport-marker div { background: #ff7800; }
-.wiki-marker div { background: #ffcc00; }
+.airport-marker {
+    background: url('data:image/svg+xml;utf8,<svg ...></svg>') no-repeat center center;
+    width: 24px;
+    height: 24px;
+    background-size: contain;
+}
 
-.current-location-icon div {
+.wiki-marker {
+    background: #ffcc00;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.current-location-icon {
     background: #dc3545;
     width: 16px;
     height: 16px;
     border-radius: 50%;
     border: 2px solid white;
     animation: pulse 1.5s infinite;
-    transform: translate(-8px, -8px);
 }
 
 @keyframes pulse {
-    0% { transform: translate(-8px, -8px) scale(1); }
-    50% { transform: translate(-8px, -8px) scale(1.2); }
-    100% { transform: translate(-8px, -8px) scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
-.form-switch .form-check-input {
-    width: 2.5em;
-    height: 1.5em;
-    cursor: pointer;
+/* Marker clusters */
+.marker-cluster {
+    background-clip: padding-box;
+    border-radius: 20px;
 }
 
-.form-switch .form-check-label {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.marker-cluster-cities {
+    background-color: rgba(51, 136, 255, 0.6);
 }
 
+.marker-cluster-cities div {
+    background-color: rgba(51, 136, 255, 0.8);
+    color: white;
+}
+
+.marker-cluster-airports {
+    background-color: rgba(255, 120, 0, 0.6);
+}
+
+.marker-cluster-airports div {
+    background-color: rgba(255, 120, 0, 0.8);
+    color: white;
+}
+
+.marker-cluster-wiki {
+    background-color: rgba(255, 204, 0, 0.6);
+}
+
+.marker-cluster-wiki div {
+    background-color: rgba(255, 204, 0, 0.8);
+    color: white;
+}
+
+/* Responsive styles */
 @media (max-width: 768px) {
     .info-buttons {
         bottom: 10px;
@@ -129,39 +165,41 @@ body {
         justify-content: center;
         gap: 5px;
     }
-    
+
     .info-buttons .btn {
         margin-bottom: 0;
         flex: 1 1 40px;
         padding: 0.375rem;
     }
-    
+
     .info-buttons .btn i {
         font-size: 1.2rem;
     }
-    
+
     #mapControls {
-        top: auto;
-        bottom: 80px;
-        left: 10px;
-        right: 10px;
-        width: auto;
+        display: none;
     }
 }
 
-/* Modal customizations */
-.modal-body img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 4px;
+
+/* Plane icon styling */
+.leaflet-marker-icon {
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
 }
 
-.table-responsive {
-    max-height: 400px;
-    overflow-y: auto;
+/* Airport cluster styling */
+.airport-cluster {
+    background: rgba(255, 120, 0, 0.7);
+    border-radius: 50%;
+    text-align: center;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.card-img-top {
-    height: 150px;
-    object-fit: cover;
+.airport-cluster div {
+    font-size: 14px;
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
 }

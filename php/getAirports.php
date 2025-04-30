@@ -1,59 +1,48 @@
 <?php
 header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *");
 
-if (!isset($_GET['country'])) {
-    echo json_encode(['error' => 'Country code is required']);
+// Validate parameters
+$country = $_GET['country'] ?? '';
+if (empty($country)) {
+    echo json_encode(['error' => 'Missing country code']);
     exit;
 }
 
-$countryCode = strtoupper($_GET['country']);
-$cacheFile = "cache/airports_{$countryCode}.json";
+// GeoNames credentials (REPLACE WITH YOUR USERNAME)
+$username = 'dimejioladiti';
 
-// Use cached data if fresh (1 week cache)
-if (file_exists($cacheFile) && time() - filemtime($cacheFile) < 604800) {
-    echo file_get_contents($cacheFile);
+// Build API URL
+$url = "http://api.geonames.org/searchJSON?" . http_build_query([
+    'country' => $country,
+    'featureCode' => 'AIRP', // Airports only
+    'maxRows' => 50,
+    'username' => $username
+]);
+
+// Fetch data
+$response = file_get_contents($url);
+if ($response === false) {
+    echo json_encode(['error' => 'Failed to fetch data from GeoNames']);
     exit;
 }
 
-$url = "https://ourairports.com/data/airports.csv";
-
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$csvData = curl_exec($ch);
-curl_close($ch);
-
-if ($csvData === false) {
-    echo json_encode(['error' => 'Failed to fetch airport data']);
+// Process response
+$data = json_decode($response, true);
+if (isset($data['status'])) {
+    echo json_encode(['error' => 'GeoNames error: ' . $data['status']['message']]);
     exit;
 }
 
-$airports = [];
-$lines = explode("\n", $csvData);
-$headers = str_getcsv(array_shift($lines));
+// Return simplified airport data
+$airports = array_map(function($airport) {
+    return [
+        'name' => $airport['name'],
+        'code' => $airport['iataCode'] ?? '',
+        'lat' => (float)($airport['lat'] ?? 0),
+        'lng' => (float)($airport['lng'] ?? 0),
+        'city' => $airport['adminName1'] ?? ''
+    ];
+}, $data['geonames'] ?? []);
 
-foreach ($lines as $line) {
-    $row = str_getcsv($line);
-    if (count($row) < count($headers)) continue;
-    
-    $airport = array_combine($headers, $row);
-    if ($airport['iso_country'] === $countryCode && 
-        in_array($airport['type'], ['medium_airport', 'large_airport'])) {
-        $airports[] = [
-            'name' => $airport['name'] ?? 'Unknown Airport',
-            'lat' => $airport['latitude_deg'] ?? 0,
-            'lng' => $airport['longitude_deg'] ?? 0,
-            'code' => $airport['iata_code'] ?? 'N/A'
-        ];
-    }
-}
-
-if (!empty($airports)) {
-    // Save to cache
-    file_put_contents($cacheFile, json_encode($airports));
-    echo json_encode($airports);
-} else {
-    echo json_encode(['error' => 'No airports found for this country']);
-}
+echo json_encode($airports);
 ?>
